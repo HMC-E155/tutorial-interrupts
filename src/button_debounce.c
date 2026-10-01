@@ -17,14 +17,14 @@
 #define STABLE_SAMPLES 4 // Samples in a row that must agree (4 x 5 ms = 20 ms)
 
 void initDebounceTimer(void){
-    RCC->APB1ENR1 |= RCC_APB1ENR1_TIM6EN;
+    RCC->APB1ENR1 |= (1 << 4); // TIM6EN
 
     TIM6->PSC = (SystemCoreClock / 1000) - 1; // 1 ms per count
     TIM6->ARR = SAMPLE_MS - 1;                // Update event every SAMPLE_MS
-    TIM6->EGR |= TIM_EGR_UG;                  // Load PSC and ARR
-    TIM6->SR &= ~TIM_SR_UIF;                  // UG also sets UIF, so clear it
-    TIM6->DIER |= TIM_DIER_UIE;               // Interrupt on update event
-    TIM6->CR1 |= TIM_CR1_CEN;                 // Start counting
+    TIM6->EGR |= (1 << 0);                    // UG: load PSC and ARR
+    TIM6->SR &= ~(1 << 0);                    // UG also sets UIF, so clear it
+    TIM6->DIER |= (1 << 0);                   // UIE: interrupt on update event
+    TIM6->CR1 |= (1 << 0);                    // CEN: start counting
 }
 
 int main(void) {
@@ -35,10 +35,10 @@ int main(void) {
     // Enable button as input
     gpioEnable(GPIO_PORT_A);
     pinMode(BUTTON_PIN, GPIO_INPUT);
-    GPIOA->PUPDR |= _VAL2FLD(GPIO_PUPDR_PUPD7, 0b01); // Set PA7 as pull-up
+    GPIOA->PUPDR |= (0b01 << 2*gpioPinOffset(BUTTON_PIN)); // Set PA7 as pull-up (PUPD7 = 01)
 
     // Initialize timer
-    RCC->APB1ENR1 |= RCC_APB1ENR1_TIM2EN;
+    RCC->APB1ENR1 |= (1 << 0); // TIM2EN
     initTIM(DELAY_TIM);
 
     // Start the sampling timer
@@ -48,7 +48,7 @@ int main(void) {
     __enable_irq();
 
     // Turn on TIM6 interrupt in NVIC_ISER. TIM6_DAC is IRQ 54, so it is bit 54 - 32 = 22 of ISER1.
-    NVIC->ISER[1] |= (1 << (TIM6_DAC_IRQn - 32));
+    NVIC->ISER[1] |= (1 << (54 - 32));
 
     while(1){
         delay_millis(DELAY_TIM, 200);
@@ -60,9 +60,9 @@ void TIM6_DAC_IRQHandler(void){
     static int stable_state = 1; // Debounced button state (1 = released, because of the pull-up)
     static int count = 0;        // Samples in a row that differ from stable_state
 
-    if (TIM6->SR & TIM_SR_UIF){
+    if (TIM6->SR & (1 << 0)){ // UIF
         // Clear the update interrupt flag (NB: Write 0 to reset.)
-        TIM6->SR &= ~TIM_SR_UIF;
+        TIM6->SR &= ~(1 << 0);
 
         int raw = digitalRead(BUTTON_PIN);
         if (raw != stable_state){

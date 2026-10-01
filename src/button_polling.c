@@ -19,10 +19,10 @@ int main(void) {
     // Enable button as input
     gpioEnable(GPIO_PORT_A);
     pinMode(BUTTON_PIN, GPIO_INPUT);
-    GPIOA->PUPDR |= _VAL2FLD(GPIO_PUPDR_PUPD7, 0b01); // Set PA7 as pull-up
+    GPIOA->PUPDR |= (0b01 << 2*gpioPinOffset(BUTTON_PIN)); // Set PA7 as pull-up (PUPD7 = 01)
 
     // Initialize timer
-    RCC->APB1ENR1 |= RCC_APB1ENR1_TIM2EN;
+    RCC->APB1ENR1 |= (1 << 0); // TIM2EN
     initTIM(DELAY_TIM);
 
     int volatile cur_button_state = digitalRead(BUTTON_PIN);
