@@ -1,7 +1,7 @@
 // main.h
 // Josh Brake
 // jbrake@hmc.edu
-// 10/31/22 
+// 10/31/22
 
 #ifndef MAIN_H
 #define MAIN_H
@@ -13,8 +13,8 @@
 // Custom defines
 ///////////////////////////////////////////////////////////////////////////////
 
-#define LED_PIN PA5
-#define BUTTON_PIN PA4
+#define LED_PIN PB3
+#define BUTTON_PIN PA7
 #define DELAY_TIM TIM2
 
 #endif // MAIN_H
