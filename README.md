@@ -6,11 +6,15 @@ This GPIO pin is connected to a pullup resistor, thus, pressing it will ground t
 
 ## Configuration Steps
 
-The steps to configure the interrupt are as follows:
+A button press reaches the interrupt handler only if every stage passes it on. Leave one closed and nothing
+happens, with no error message.
 
-1.   `EXTI` mux in the `SYSCFG` peripheral
-2.   Configure interrupt generation settings in EXTI peripheral
-3.   Globally enable interrupts
-4.   Set Interrupt Mask Register (`IMR`)
-5.   Select rising/falling edge trigger
-6.   Turn on the interrupt in the `NVIC_ISER` (NB: The bits in the NVIC registers correspond to the interrupt position in the vector table).
+0.   **RCC**: turn on the clock to the `SYSCFG` peripheral.
+1.   **SYSCFG**: set the `EXTI` mux in `SYSCFG_EXTICR` so the button's port drives its EXTI line.
+2.   **EXTI**: unmask the line in the interrupt mask register (`EXTI_IMR1`) and select the falling edge
+     (`EXTI_RTSR1` and `EXTI_FTSR1`).
+3.   **NVIC**: turn on the interrupt in `NVIC_ISER`. The bits in the NVIC registers correspond to the interrupt
+     position in the vector table, not the EXTI line.
+4.   **CPU**: enable interrupts globally with `__enable_irq()`.
+5.   **Vector table**: name the handler exactly as it appears in the vector table. Inside the handler, check and
+     clear the pending bit in `EXTI_PR1`.
